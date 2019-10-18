@@ -1,0 +1,10 @@
+Instrumental:
+  $ cd /path/to/Instrumental
+  $ python setup.py install
+  
+  $ pip install pint
+  $ pip install pyvisa
+  
+NiceLib
+  $ cd /path/to/NiceLib
+  $ pip install .
