@@ -1,3 +1,6 @@
-#import instrumental
+import instrumental
+from instrumental import instrument, list_instruments
 
-#myCCS = instrumental.drivers.spectrometers.thorlabs_ccs.CCS()
+print(list_instruments())
+
+#myCCS = instrument('CCS')
