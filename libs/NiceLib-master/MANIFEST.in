@@ -1,3 +1,0 @@
-include *.rst AUTHORS LICENSE
-include docs/Makefile docs/make.bat docs/conf.py docs/*.rst
-recursive-include tests *.py *.h
