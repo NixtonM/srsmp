@@ -6,12 +6,13 @@ import numpy as np
 
 class Thor_CCS175:
     def __init__(self,integration_time=200):
-        print("----------\nEstablishing connection to Thorlabs CCS175 spectrometer.\n----------\n")
+        print("Establishing connection to Thorlabs CCS175 spectrometer.\n")
         self.ccs = instrument('CCS')
         self.integration_time = integration_time # in ms
         self.integration_time_test = integration_time//10
         #self.wavelengths = self.ccs.get_wavelengths()
         self.wavelengths = self.ccs._wavelength_array
+        print("Connection successful")
 
 
     def get_ideal_scan(self, target_intensity = 0.8, test_time = None):
