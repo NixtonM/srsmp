@@ -10,24 +10,25 @@ from keras.optimizers import Adam
 class Hydrophobic_Predictor:
 	def __init__(self):
 		# initialize config and params parser
-		self.config = configparser.ConfigParser()
-		self.params = configparser.ConfigParser()
+		self.config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+		self.params = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 
 		# load config.ini
 		self.config.read('config.ini')
-		files = os.listdir(self.config['PredictApp']['model_dir'])
+		model_dir = self.config['PredictApp']['model_dir']
+		files = os.listdir(model_dir)
 		# check if one .ini and one .h5 file present
 		if len(files) != 2:
-			warnings.warn('Make sure only two files are given. The weights as .h5 and the corresponding .ini file.')
+			warnings.warn('Make sure only two files are given. (The weights as .h5 and the corresponding .ini file.)')
 
 		# load model and corresponding .ini file
 		try:
 			if files[0].endswith(".h5"):
-				self.model = load_model(files[0])
-				self.params.read(files[1])
+				self.model = load_model(model_dir+'/'+files[0])
+				self.params.read(model_dir+'/'+files[1])
 			elif file[0].endswith(".ini"):
-				self.params.read(files[0])
-				self.model = load_model(files[1])
+				self.params.read(model_dir+'/'+files[0])
+				self.model = load_model(model_dir+'/'+files[1])
 		except:
 			warnings.warn('Make sure the weights are given as .h5 and with the corresponding .ini file.')
 
@@ -66,4 +67,3 @@ class Hydrophobic_Predictor:
 		prediction = np.argmax(pred)
 
 		return prediction
-
