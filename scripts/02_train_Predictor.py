@@ -1,3 +1,6 @@
+from srsmp import *
+#from Preprocessings import pre_process, CalcRefScale
+
 import os
 from datetime import datetime
 import numpy as np
@@ -5,7 +8,8 @@ import matplotlib.pyplot as plt
 import json
 import warnings
 import configparser
-from Preprocessings import pre_process, CalcRefScale
+import re
+
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -41,7 +45,7 @@ resnet_model = True
 sel_WL = True
 range_low = 500 # [nm]
 range_high = 1000 # [nm]
-use_t_int = True
+use_t_int = False
 data_augm_train = True
 data_augm_test = False # normally set to False
 preprocessing_method = 2
@@ -49,20 +53,19 @@ preprocessing_method = 2
 # NN general
 train_size = 0.8
 batch_size = 32
-epochs = 300
+epochs = 2
 val_split = 0.2
 dropout_rate = 0.4
 use_callbacks = True
 
 # NN - ResNet
-num_classes = 2
 num_filters = 100
 
 
 
 #%% load configuration and create log-file
-# data paths from ini file
-config = configparser.ConfigParser()
+# data paths from config.ini file
+config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 config.read('config.ini')
 
 train_path = config['NeuralNetTrain']['train_dir']
@@ -71,11 +74,15 @@ if separate_data_sets:
 
 results_dir = config['NeuralNetTrain']['results_dir']
 
+# class lookup from config.ini file
+class_lookup = {}
+for i in range(len(config['ClassLookup'])):
+	class_lookup[config['ClassLookup'][str(i)]] = i
+
 # create new file to log results
-i = 1
 cur_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
 cur_date = cur_datetime[:8]
-log1 = open(os.path.join(results_dir,'output/%s_log.txt' % (cur_datetime), 'w+'))
+log1 = open(results_dir + '/output/%s_log.txt' % (cur_datetime), 'w+')
 
 # log current date and time
 log1.write(cur_datetime + "\n\n")
@@ -84,13 +91,14 @@ log1.write(cur_datetime + "\n\n")
 
 #%% Get data
 # get data from single source
-def get_data(train_path,sel_WL,use_t_int,data_augm_train,train_size,preprocessing_method):
+def get_data(train_path,sel_WL,use_t_int,data_augm_train,train_size,preprocessing_method,class_lookup):
 	# load from file
 	X1,y1,labels,class_lookup = getData_binary(train_path,
 											sel_WL=sel_WL,
 											use_t_int=use_t_int,
 											data_augm=data_augm_train,
-											method=preprocessing_method)
+											method=preprocessing_method,
+											class_lookup=class_lookup)
 	# transform 
 	y1 = np.expand_dims(y1,axis=1)
 	labels = np.expand_dims(labels,axis=1)
@@ -109,26 +117,28 @@ def get_data(train_path,sel_WL,use_t_int,data_augm_train,train_size,preprocessin
 
 
 # get data from different train and test source
-def get_training_data(train_path,sel_WL,use_t_int,data_augm_train,preprocessing_method):
+def get_training_data(train_path,sel_WL,use_t_int,data_augm_train,preprocessing_method,class_lookup):
 	# load training from file
 	X_train,y_train,labels_train,class_lookup = getData_binary(train_path,
 															sel_WL=sel_WL,
 															use_t_int=use_t_int,
 															data_augm=data_augm_train,
-															method=preprocessing_method)
+															method=preprocessing_method,
+															class_lookup=class_lookup)
 	# shuffle to randomize
 	X_train, y_train = shuffle(X_train,y_train)
 
 	return X_train, y_train, class_lookup
 
 
-def get_test_data(test_path,sel_WL,use_t_int,data_augm_test,preprocessing_method):
+def get_test_data(test_path,sel_WL,use_t_int,data_augm_test,preprocessing_method,class_lookup):
 	# load test data from file
 	X_test,y_test,labels_test,class_lookup = getData_binary(test_path,
 															sel_WL=sel_WL,
 															use_t_int=use_t_int,
 															data_augm=data_augm_test,
-															method=preprocessing_method)
+															method=preprocessing_method,
+															class_lookup=class_lookup)
 	# shuffle to randomize
 	X_test, y_test, labels_test = shuffle(X_test,y_test,labels_test)
 	labels_test = np.expand_dims(labels_test,axis=1)
@@ -137,22 +147,24 @@ def get_test_data(test_path,sel_WL,use_t_int,data_augm_test,preprocessing_method
 
 
 # read in the data from files
-def getData_binary(d_path,sel_WL=True,use_t_int=False,data_augm=False,method=3):
+def getData_binary(d_path,sel_WL=True,use_t_int=False,data_augm=False,method=3,class_lookup=class_lookup):
 	X = []
 	y = []
 	labels = []
 	s25 = []
 	s60 = []
 	count = []
-	int_time = {}
-	class_lookup = {'treated': 0, 'untreated': 1}
 
 	for filename in os.listdir(d_path):
-		int_time[filename] = []
-		if filename[-14:-5] == 'untreated':
-			cur_class = class_lookup[filename[-14:-5]]
-		else:
-			cur_class = class_lookup[filename[-12:-5]]
+		# get class from filename
+		re_str = re.compile("\S*_([a-zA-Z0-9]*).json")
+		class_name = re.findall(re_str,filename)
+		try:
+			cur_class = class_lookup[class_name[0]]
+		except:
+			warnings.warn('No valid class. Ignoring file %s' %(filename), Warning)
+			input('Press [ENTER] to continue.')
+			continue
 		# open each json-file once
 		with open(os.path.join(d_path,filename)) as f_json:
 			data = json.load(f_json)
@@ -161,7 +173,7 @@ def getData_binary(d_path,sel_WL=True,use_t_int=False,data_augm=False,method=3):
 				# extract the spectralon measurements for the current class and campaign
 				# further calculate the factor per wavelength so that the spectralon measurements correspond to their reflectance
 				for ref in data[key]['reference'].keys():
-					# only take wavelengths between 500nm and 1000nm
+					# only take wavelengths between range_low and range_high
 					measurements = np.asarray(data[key]['reference'][ref][1])
 					if sel_WL:
 						wavelengths = np.asarray(data[key]['reference'][ref][0])
@@ -182,7 +194,7 @@ def getData_binary(d_path,sel_WL=True,use_t_int=False,data_augm=False,method=3):
 				for ep in data[key].keys():
 					if (ep != 'reference'):
 						measurements = np.asarray(data[key][ep][1])
-						# only take wavelengths between 500nm and 1000nm
+						# only take wavelengths between range_low and range_high
 						if sel_WL:
 							wavelengths = np.asarray(data[key][ep][0])
 							ind = np.where( (wavelengths >= range_low) & (wavelengths <= range_high) )
@@ -276,14 +288,28 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 	x = Dense(64, activation='relu')(x)
 	#x = Dense(32, activation='relu')(x)
 
-	outputs = Dense(len(class_lookup), activation='sigmoid')(x) 
+	# for binary models
+	if len(class_lookup) == 2:
+		outputs = Dense(len(class_lookup), activation='sigmoid')(x) 
 
-	model = Model(inputs, outputs)
+		model = Model(inputs, outputs)
 	
-	# compile & fit model
-	model.compile(loss='binary_crossentropy',
-				  optimizer=Adam(learning_rate=lr_schedule(0)),
-				  metrics=['accuracy'])
+		# compile & fit model
+		model.compile(loss='binary_crossentropy',
+					  optimizer=Adam(learning_rate=lr_schedule(0)),
+					  metrics=['accuracy'])
+
+	# for more than 2 classes
+	else:
+		outputs = Dense(len(class_lookup), activation='softmax')(x) 
+
+		model = Model(inputs, outputs)
+	
+		# compile & fit model
+		model.compile(loss='categorical_crossentropy',
+					  optimizer=Adam(learning_rate=lr_schedule(0)),
+					  metrics=['accuracy'])
+
 	model.summary()
 
 	# NN callbacks
@@ -291,7 +317,7 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 		es = EarlyStopping(monitor='val_loss',
 						   patience=75,
 						   restore_best_weights=True)
-		mc = ModelCheckpoint(os.path.join(results_dir,"models/" + cur_datetime + "_BasicNN.h5"),
+		mc = ModelCheckpoint(results_dir + '/models/' + cur_datetime + '_BasicNN.h5',
 							 monitor='val_loss',
 							save_best_only=True)
 		lr_scheduler = LearningRateScheduler(lr_schedule)
@@ -299,12 +325,12 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 		log1.write("Callbacks: EarlyStopping, ModelCheckpoint, LearningRateScheduler \n\n")
 
 		# create .ini file with parameters
-		params = configparser.ConfigParser()
+		params = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 		params['Preprocessing'] = {'sel_WL': sel_WL,
 								   'range_low': range_low,
 								   'range_high': range_high,
-								   'method': method}
-		with open(os.path.join(results_dir,"models/" + cur_datetime + "_BasicNN.ini"), 'w') as configfile:
+								   'method': preprocessing_method}
+		with open(results_dir + '/models/' + cur_datetime + '_BasicNN.ini', 'w') as configfile:
 			params.write(configfile)
 		log1.write("ini-file created. \n\n")
 
@@ -330,10 +356,8 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 	plt.xlabel('Epoch')
 	plt.legend(['Train', 'Test'], loc='upper left')
 	#plt.show()
-	plt.savefig(os.path.join(results_dir,"output/"+cur_datetime+"_basicNN_accuracy.png"))
+	plt.savefig(results_dir + '/output/'+cur_datetime+'_basicNN_accuracy.png')
 	plt.close()
-	np.savetxt("accuracy.csv",history.history['accuracy'],delimiter=",")
-	np.savetxt("val_accuracy.csv",history.history['val_accuracy'],delimiter=",")
 
 	# Plot training & validation loss values
 	plt.plot(history.history['loss'])
@@ -343,17 +367,14 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 	plt.xlabel('Epoch')
 	plt.legend(['Train', 'Test'], loc='upper left')
 	#plt.show()
-	plt.savefig(os.path.join(results_dir,"output/"+cur_datetime+"_basicNN_loss.png"))
+	plt.savefig(results_dir+'/output/'+cur_datetime+'_basicNN_loss.png')
 	plt.close()
-	np.savetxt("loss.csv",history.history['loss'],delimiter=",")
-	np.savetxt("val_loss.csv",history.history['val_loss'],delimiter=",")
 
 	# calculate loss and accuracy on test data set
 	pred = model.predict(x=X_test)
 	pred = np.concatenate((pred,labels_test),axis=1)
 	score = model.evaluate(x=X_test, y=y_test)
 	print('loss: {}, accuracy: {}'.format(score[0],score[1]))
-	np.savetxt("predictions.csv",pred,delimiter=",",fmt='%s')
 
 	# log the results
 	log1.write("#epochs trained for: %i \n" % (len(history.history['loss'])))
@@ -367,14 +388,23 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 #%% ResNet - Fully Connected 
 def resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_classes,num_filters,log1):
 	# adjust labels and determine shape 
-	y_train = to_categorical(y_train, len(class_lookup))
-	y_test = to_categorical(y_test, len(class_lookup))
+	y_train = to_categorical(y_train, num_classes)
+	y_test = to_categorical(y_test, num_classes)
 	input_shape = X_train.shape[1:]
 	# build and compile
 	model = build_resnet_fc(input_shape,num_classes=num_classes,num_filters=num_filters)
-	model.compile(loss='binary_crossentropy',
-			   optimizer=Adam(learning_rate=lr_schedule(0)),
-			   metrics=['accuracy'])
+
+	# for binary models
+	if num_classes == 2:
+		model.compile(loss='binary_crossentropy',
+					  optimizer=Adam(learning_rate=lr_schedule(0)),
+					  metrics=['accuracy'])
+	# for more than 2 classes
+	else:
+		model.compile(loss='categorical_crossentropy',
+					  optimizer=Adam(learning_rate=lr_schedule(0)),
+					  metrics=['accuracy'])
+
 	model.summary()
 
 	# NN callbacks
@@ -382,7 +412,7 @@ def resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_clas
 		es = EarlyStopping(monitor='val_loss',
 						   patience=75,
 						   restore_best_weights=True)
-		mc = ModelCheckpoint(os.path.join(results_dir,"models/" + cur_datetime + "_ResNet.h5"),
+		mc = ModelCheckpoint(results_dir+'/models/' + cur_datetime + '_ResNet.h5',
 							 monitor='val_loss',
 							save_best_only=True)
 		lr_scheduler = LearningRateScheduler(lr_schedule)
@@ -390,12 +420,12 @@ def resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_clas
 		log1.write("Callbacks: EarlyStopping, ModelCheckpoint, LearningRateScheduler \n\n")
 
 		# create .ini file with parameters
-		params = configparser.ConfigParser()
+		params = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 		params['Preprocessing'] = {'sel_WL': sel_WL,
 								   'range_low': range_low,
 								   'range_high': range_high,
-								   'method': method}
-		with open(os.path.join(results_dir,"models/" + cur_datetime + "_ResNet.ini"), 'w') as configfile:
+								   'method': preprocessing_method}
+		with open(results_dir+'/models/' + cur_datetime + '_ResNet.ini', 'w') as configfile:
 			params.write(configfile)
 		log1.write("ini-file created. \n\n")
 	
@@ -422,7 +452,7 @@ def resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_clas
 	plt.xlabel('Epoch')
 	plt.legend(['Train', 'Test'], loc='upper left')
 	#plt.show()
-	plt.savefig(os.path.join(results_dir,"output/"+cur_datetime+"_ResNetFC_accuracy.png"))
+	plt.savefig(results_dir+'/output/'+cur_datetime+'_ResNetFC_accuracy.png')
 	plt.close()
 
 	# Plot training & validation loss values
@@ -433,7 +463,7 @@ def resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_clas
 	plt.xlabel('Epoch')
 	plt.legend(['Train', 'Test'], loc='upper left')
 	#plt.show()
-	plt.savefig(os.path.join(results_dir,"output/"+cur_datetime+"_ResNetFC_loss.png"))
+	plt.savefig(results_dir+'/output/'+cur_datetime+'_ResNetFC_loss.png')
 	plt.close()
 
 	score = model.evaluate(x=X_test, y=y_test)
@@ -447,7 +477,7 @@ def resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_clas
 
 
 # fully connected ResNet model
-def build_resnet_fc(input_shape,num_classes=num_classes,num_filters=num_filters):
+def build_resnet_fc(input_shape,num_classes,num_filters=num_filters):
 	# model definition
 	num_res_blocks = 1 # to fix depending on depth (num_res_blocks * 6 + 2)
 
@@ -476,8 +506,15 @@ def build_resnet_fc(input_shape,num_classes=num_classes,num_filters=num_filters)
 		num_filters *= 2
 
 	# add classifier on top
-	outputs = Dense(num_classes,
+	# for binary models
+	if num_classes == 2:
+		outputs = Dense(num_classes,
 					activation='sigmoid',
+					kernel_initializer='he_normal')(x)
+	# for more than 2 classes
+	else:
+		outputs = Dense(num_classes,
+					activation='softmax',
 					kernel_initializer='he_normal')(x)
 
 	# instantiate model
@@ -523,15 +560,15 @@ def lr_schedule(epoch):
 #%% call functions
 # get data
 if separate_data_sets:
-	X_train,y_train,X_test,y_test,labels_test,class_lookup = get_data(train_path,sel_WL,use_t_int,data_augm_train,train_size,preprocessing_method)
-	log1.write("Data from one dataset with train-test split. \n %i training samples, %i test samples. \n" % (np.shape(y_train)[0], np.shape(y_test)[0]))
-	log1.write("Preprocessing method: %i \n" % (preprocessing_method))
-else:
-	X_train,y_train,class_lookup = get_training_data(train_path,sel_WL,use_t_int,data_augm_train,preprocessing_method)
-	X_test,y_test,labels_test = get_test_data(test_path,sel_WL,use_t_int,data_augm_test,preprocessing_method)
+	X_train,y_train,class_lookup = get_training_data(train_path,sel_WL,use_t_int,data_augm_train,preprocessing_method,class_lookup)
+	X_test,y_test,labels_test = get_test_data(test_path,sel_WL,use_t_int,data_augm_test,preprocessing_method,class_lookup)
 	log1.write("Data from separate training and test files. \n %i training samples, %i test samples. \n" % (np.shape(y_train)[0], np.shape(y_test)[0]))
 	log1.write("Preprocessing method: %i \n" % (preprocessing_method))
-if (preprocessing_method==5) & (not(data_from_pickle)):
+else:
+	X_train,y_train,X_test,y_test,labels_test,class_lookup = get_data(train_path,sel_WL,use_t_int,data_augm_train,train_size,preprocessing_method,class_lookup)
+	log1.write("Data from one dataset with train-test split. \n %i training samples, %i test samples. \n" % (np.shape(y_train)[0], np.shape(y_test)[0]))
+	log1.write("Preprocessing method: %i \n" % (preprocessing_method))
+if preprocessing_method==1:
 	# standardization
 	mean_X = np.mean(X_train)
 	std_X = np.std(X_train)
@@ -552,7 +589,7 @@ if basic_model:
 
 # get ResNet fully connected
 if resnet_model:
-	resnet_fc_score = resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_classes,num_filters,log1)
+	resnet_fc_score = resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,len(class_lookup),num_filters,log1)
 
 
 

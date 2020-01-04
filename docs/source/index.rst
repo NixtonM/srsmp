@@ -5,7 +5,7 @@
 Spatially Referenced Spectroscopy for Material Probing (**SRSMP**)
 ==================================================================
 **SRSMP** is a Python-based library that offers a framework, in conjunction with the software 
-`SpatialAnalyzer <https://www.kinematics.com/spatialanalyzer/index.php>`_. by New River Kinematics, 
+`SpatialAnalyzer <https://www.kinematics.com/spatialanalyzer/index.php>`_ by New River Kinematics, 
 to generate 3D maps of material properties.
 The hardware used in this implementation is the following:
 

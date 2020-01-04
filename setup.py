@@ -19,7 +19,8 @@ if __name__ == '__main__':
               #'instrumental-lib',
               'tensorflow==2.0.0',
               'keras==2.3.1',
-              'scikit-learn'
+              'scikit-learn',
+              'matplotlib',
               ],
           zip_safe=False,
           )

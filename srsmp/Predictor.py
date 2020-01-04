@@ -1,8 +1,7 @@
 import numpy as np
 import os
-import warnings
 import configparser
-from Preprocessings import pre_process
+from .Preprocessings import pre_process
 from keras.models import load_model
 from keras.optimizers import Adam
 
@@ -19,7 +18,7 @@ class Hydrophobic_Predictor:
 		files = os.listdir(model_dir)
 		# check if one .ini and one .h5 file present
 		if len(files) != 2:
-			warnings.warn('Make sure only two files are given. (The weights as .h5 and the corresponding .ini file.)')
+			raise RuntimeError('Make sure only two files are given. (The weights as .h5 and the corresponding .ini file.)')
 
 		# load model and corresponding .ini file
 		try:
@@ -30,7 +29,7 @@ class Hydrophobic_Predictor:
 				self.params.read(model_dir+'/'+files[0])
 				self.model = load_model(model_dir+'/'+files[1])
 		except:
-			warnings.warn('Make sure the weights are given as .h5 and with the corresponding .ini file.')
+			raise RuntimeError('Make sure the weights are given as .h5 and with the corresponding .ini file.')
 
 		# compile the model
 		self.model.compile(loss='binary_crossentropy',

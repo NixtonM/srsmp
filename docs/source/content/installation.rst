@@ -1,7 +1,6 @@
-Installation Process
+﻿Installation Process
 ====================
 The following section gives step-by-step instructions to set up **SRSMP** under a *Windows environment*.
-
 
 Prerequisites
 -------------
@@ -19,18 +18,18 @@ We also recommend setting up a new *virtual environment* within *anaconda*:
 .. code-block:: shell
 
    $ conda create --name srsmp_env python=3.6
+   $ conda activate srsmp_env
 
 
 Package Installation
 -------------------------
-All dependencies for a functional installation have been defined within :file:`repo/setup.py` and therefore can be 
-installed by:
+All dependencies for a functional installation have been defined within :file:`repo/setup.py` 
+and therefore can be installed by:
 
 .. code-block:: shell
 
    $ cd /path/to/repo
    $ pip install .
-	
 
 **SRSMP** uses `Instrumental <https://instrumental-lib.readthedocs.io/>`_ by *Nate Bogdanowicz*. At the time 
 of the deployment of **SRSMP**, required features within *Instrumental* were only available in the current 

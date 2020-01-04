@@ -56,11 +56,6 @@ Different parameters have to be defined to run the neural networks.
    |space|
 :code:`use_callbacks`
    Whether or not to use callbacks (EarlyStopping, ModelCheckpoint, LearningRateScheduler).
-:code:`num_classes`
-   Scalar giving the number of classes. 
-   (If not equal to 2 use loss = categorical_crossentropy and activation = Softmax in last 
-   fully connected layer. If equal to 2 use loss = binary_crossentropy and activation = Sigmoid 
-   in last fully connected layer.)
 :code:`num_filters`
    Scalar defining the number of filters used in the fully connected layers for the ResNet8 
    architecture.
