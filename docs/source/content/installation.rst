@@ -9,9 +9,10 @@ As mentioned before, **SRSMP** is currently only supported within *Windows*.
 The following prerequisits must be fulfilled for a successful installation:
 
 - Download and extract a zip of **SRSMP** from the `GitHub page <https://github.com/NixtonM/srsmp>`_.
-- Install **Thorlabs OSA** drivers (included within the *repository*)
+- Install **Thorlabs OSA** drivers (included within :file:`repo/drivers`)
 - Install a **C compiler** (either via *Microsoft Visual Studio* or *MinGW*)
 - Install **Python** (implementation written and tested on *v3.6*)
+- Licensed version of  **SpatialAnalyzer**
 
 We also recommend setting up a new *virtual environment* within *anaconda*:
 
@@ -22,7 +23,7 @@ We also recommend setting up a new *virtual environment* within *anaconda*:
 
 Package Installation
 -------------------------
-All dependencies for a functional installation have been defined within `setup.py` and therefore can be 
+All dependencies for a functional installation have been defined within :file:`repo/setup.py` and therefore can be 
 installed by:
 
 .. code-block:: shell

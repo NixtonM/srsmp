@@ -1,5 +1,6 @@
 .. image:: ../images/logo.png
     :align: right
+
 ==================================================================
 Spatially Referenced Spectroscopy for Material Probing (**SRSMP**)
 ==================================================================
