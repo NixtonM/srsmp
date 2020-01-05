@@ -15,27 +15,24 @@ coupled with the corresponding 3D corrdinates within SpatialAnalyzer.
 Python Set-Up
 -------------
 To minimize time needed per measurement, the python side of the application framework was
-implemented in a server/client architecture.
-
-:file:`repo/scripts/03a_application_server.py` initializes a local server, which maintains 
-the connection with the *Thorlabs spectrometer*. :file:`repo/scripts/03b_application_client.py` 
-send the appropiate commands to the server to trigger measurements etc.
+implemented in a server/client architecture. A local server maintains the connection with 
+the *Thorlabs spectrometer*. The client sends the appropiate commands to the server to 
+trigger measurements etc.
 
 Before running copy ...
 
-Run :file:`repo/scripts/03a_application_server.py` and wait for the message *'Ready for 
-reference measurement'*. Hold the **probe tip** to the reference spectra and run (in a 
-separate command prompt):
+Run :file:`repo/scripts/03a_application_server.py` to start the local server and wait for 
+the message *'Ready for reference measurement'*. Hold the **probe tip** to the reference 
+spectra and run (in a separate command prompt):
 
 .. code-block:: shell
 
-   $ cd repo/scripts
    $ python 03b_application_client.py -1
 
 The argument `-1` must be replaced by `-2` if using Spectralon 25% instead of 60%.
 
-The server is now ready for the measurements to be triggered from SpatialAnalyzer (see 
-the following section).
+The server is now ready for the measurements to be triggered from SpatialAnalyzer (via the 
+client).
 
 Once all measurements have been taken, run:
 
