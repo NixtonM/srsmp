@@ -83,7 +83,6 @@ class ThorData():
         self.data = {}
       
 
-
     def load_class_data(self, class_id, campaign_nr = None):
         if class_id in self.class_ids:
             raise ValueError("This class ID has already been loaded and initialized!")

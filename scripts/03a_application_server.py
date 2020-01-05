@@ -2,18 +2,24 @@ from srsmp import *
 #from Thor import Thor_CCS175, ThorData
 #from Predictor.Predictor import Hydrophobic_Predictor
 
+import os
 import socket, time, re
 import struct, random, datetime
 import numpy as np
 
 from pathlib import Path
+import configparser
+import datetime
 
 from scipy.spatial.transform import Rotation as R
 
-def read_com_link(regex_pattern):
-    with open(com_link_location, 'r') as f:
-        data = f.read()
-        res = [float(x) for x in re.findall(regex_pattern,data)]
+
+config_file = "config.ini"
+
+
+def read_com_link(com_link_file,regex_pattern):
+    data = com_link_file.read_text()
+    res = [float(x) for x in re.findall(regex_pattern,data)]
     return {'X':res[0],'Y':res[1],'Z':res[2],'Rx':res[3],'Ry':res[4],'Rz':res[5]}
 
 def transform_probe(probe):
@@ -23,100 +29,127 @@ def transform_probe(probe):
 
 
 if __name__ == "__main__":
+    print("---------------------------------------------")
+    config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+    config.read(config_file)
+    check_and_init_all_dir(config)
+    make_base_datashare(config,os.path.dirname(os.path.realpath(__file__)))
 
-    ## TODO: Load config
-    folder_path = "C:\\apps\\IPA\\data"
-    class_id = "specimen"
-    com_link_location = "C:\\apps\\IPA\\com_link.txt"
-    OFFSET = np.asarray([-0.000792585000000,0.065944655000000,-0.131226600000000],dtype=np.float64)
+    folder_path = Path(config['PredictApp']['spectra_dir'])
+    com_link_location = Path(config['PredictApp']['com_link_dir'])/Path(
+        config['PredictApp']['com_link_file'])
+    class_id = datetime.datetime.now().strftime("%Y%m%d%H%M")
+    
+    class_predicition_dict = dict(config['ClassLookup'])
+    
+    dx = float(config['ToolOffset']['dx'])
+    dy = float(config['ToolOffset']['dy'])
+    dz = float(config['ToolOffset']['dz'])
+
+    OFFSET = np.asarray([dx,dy,dz],dtype=np.float64)
+    print("Tool offset used:\tdx = {:+.4f}\n\t\t\tdy = {:+.4f}\n\t\t\tdz = {:+.4f}".format(dx,dy,dz))
+    print("---------------------------------------------")
 
     HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
     PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 
 
     myCCS = Thor_CCS175()
-    myDataHandler = ThorData(folder_path,class_id)
-    #measurements = myDataHandler.load_measurements()
-    cmp_nr, measurements = myDataHandler.init_empty_measurements()
-    current_reference = (None,None,)
+    wavelengths = myCCS.wavelengths.tolist()
+    myDataHandler = ThorData(folder_path)
+    measurement_data = {'reference': {}}
+    print("---------------------------------------------")
+   
+    # unique class_id --> will init empty data
+    myDataHandler.load_class_data(class_id)
+
+    #current_reference = (None,None,)
 
     hydro_pred = Hydrophobic_Predictor()
+    ref_set = False
 
     # Definition of scientific pattern regex
     sci_not_regex = re.compile('[+|-]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[+|-]?\ *[0-9]+)?')
 
-    pt_nr = 0
+    pt_nr = int(class_id[-2:])*100
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
+        print("---------------------------------------------")
         print('Ready for measurements')
         while True:
             exit_order = False
             conn, addr = s.accept()
             with conn:
                 epoch = datetime.datetime.now()
-                key_time = epoch.strftime("%Y%m%d-%H%M%S%f")
-                print('Connected at', key_time)
+                key_time = epoch.strftime("%Y%m%d%H%M%S%f")[:-3]
+                print('Connected at', epoch.strftime("%d.%m.%Y %H:%M:%S"))
                 while True:
                     data = conn.recv(1024)
                     if not data:
                         break
                     data_s = str(data,'utf8')
-                    key = int(data_s)
-                    if key == -1:
-                        myCCS.set_ideal_integration_time()
-                        thor_meas = myCCS.get_scan()
-                        current_reference = (60,thor_meas,)
-                        measurements[cmp_nr]['reference'][key_time] = (myCCS.wavelengths.tolist(),
-                            thor_meas.tolist(),myCCS.integration_time,"spec_60",)
-                        hydro_pred.set_spectralon(thor_meas,myCCS.wavelengths,60)
-                        print("Reference 'Spectralon 60%' set")
-                    elif key == -2:
-                        myCCS.set_ideal_integration_time()
-                        thor_meas = myCCS.get_scan()
-                        current_reference = (25,thor_meas,)
-                        measurements[cmp_nr]['reference'][key_time] = (myCCS.wavelengths.tolist(),
-                            thor_meas.tolist(),myCCS.integration_time,"spec_25",)
-                        hydro_pred.set_spectralon(thor_meas,myCCS.wavelengths,25)
-                        print("Reference 'Spectralon 25%' set")
-                    elif key == -99:
-                        exit_order =  True
+                    comm_key = int(data_s)
+                    if comm_key == -99:
+                        exit_order = True
                     else:
-                        ## Do spectrometer
-                        myCCS.set_ideal_integration_time()
-                        thor_meas = myCCS.get_scan()
-                        measurements[cmp_nr][key] = (myCCS.wavelengths.tolist(),
-                            thor_meas.tolist(),myCCS.integration_time,key_time,)
-                        class_prediction = hydro_pred.predict(thor_meas,myCCS.wavelengths)
+                        try:
+                            measurement, measurement_time = myCCS.get_ideal_scan()
+                        except:
+                            print("Spectral scan was unsuccessful.")
+                        else:
+                            if comm_key == -1:
+                                measurement_data['reference'][key_time] = (wavelengths,
+                                    measurement.tolist(),measurement_time,"spec_60",)
+                                hydro_pred.set_spectralon(measurement,myCCS.wavelengths,60)
+                                print("Reference 'Spectralon 60%' set")
+                                ref_set = True
+                            elif comm_key == -2:
+                                measurement_data['reference'][key_time] = (wavelengths,
+                                    measurement.tolist(),measurement_time,"spec_25",)
+                                hydro_pred.set_spectralon(measurement,myCCS.wavelengths,25)
+                                print("Reference 'Spectralon 25%' set")
+                                ref_set = True
+                            else:
+                                if not ref_set:
+                                    print("Measure a reference spectralon first.")
+                                    break
+
+                                measurement_data[pt_nr] = (wavelengths,
+                                    measurement.tolist(),measurement_time,)
+                                class_prediction = hydro_pred.predict(measurement,myCCS.wavelengths)
+                                class_prediction_str = class_predicition_dict[str(class_prediction)]
+
                     
-                        ## Do 3D transform
-                        probe = read_com_link(sci_not_regex)
-                        pt_coord = transform_probe(probe)
+                                ## Do 3D transform
+                                probe = read_com_link(com_link_location,sci_not_regex)
+                                pt_coord = transform_probe(probe)
 
-                        ## Write results
-                        with open(com_link_location, 'wb') as f:
-                            SA_datashare = ("<ASCII>\n"
-                                            "<I:pt_nr>\n"
-                                            "\t{:d}\n"
-                                            "<I:class_pred>\n"
-                                            "\t{:d}\n"
-                                            "<D:x>\n"
-                                            "\t{:.16e}\n"
-                                            "<D:y>\n"
-                                            "\t{:.16e}\n"
-                                            "<D:z>\n"
-                                            "\t{:.16e}\n"
-                                            .format(pt_nr,class_prediction,pt_coord[0],pt_coord[1],pt_coord[2])
-                                            )
-                            f.write(SA_datashare.encode('ascii'))
-
-                        print("Measurement {} taken and predicted as {}".format(key,class_prediction))
-
-                        pt_nr += 1
+                                ## Write results
+                                SA_datashare = ("<ASCII>\n"
+                                                    "<I:pt_nr>\n"
+                                                    "{:d}\n"
+                                                    "<S:class_pred>\n"
+                                                    "{}\n"
+                                                    "<D:x>\n"
+                                                    "{:.16e}\n"
+                                                    "<D:y>\n"
+                                                    "{:.16e}\n"
+                                                    "<D:z>\n"
+                                                    "{:.16e}\n"
+                                                    .format(pt_nr,class_prediction_str,pt_coord[0],pt_coord[1],pt_coord[2])
+                                                    )
+                                com_link_location.write_bytes(SA_datashare.encode('ascii'))
+                                
+                                print("Measurement {:04d} taken and predicted as {}".format(pt_nr,class_prediction))
+                                pt_nr += 1
                     exit_code = 0
                     conn.sendall(bytes(str(exit_code), 'utf8'))
                     break
                 if exit_order:
-                    myDataHandler.save_measurements(measurements)
+                    myDataHandler.update_class_data(class_id,measurement_data)
+                    myDataHandler.save_all_data()
                     break
+            
+            print("-----------------------")
     print("Closed for business")

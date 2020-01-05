@@ -5,36 +5,37 @@ from sklearn.preprocessing import MinMaxScaler, RobustScaler
 
 # preprocess the data
 def pre_process(measurements,ref_curve,ref_scale,method):
-	if method==1: #5
-		measurements = np.asarray(measurements)
-		cur_x = measurements * ref_scale
-		cur_x = cur_x / max(abs(cur_x))
-	elif method==2: #3
-		measurements = np.asarray(measurements)
-		abs_x = np.absolute(measurements)
-		cur_x = measurements / abs_x.max(axis=0)
-		cur_x = cur_x - ref_curve
-	elif method==3: #6
-		measurements = np.asarray(measurements)
-		cur_x = measurements / max(abs(measurements))
-		cur_x = cur_x - ref_curve
-		cur_x = np.expand_dims(cur_x,axis=2)
-		mms = MinMaxScaler(feature_range=(-1,1))
-		mms.fit_transform(cur_x)
-		cur_x = np.squeeze(cur_x, axis=1)
-	elif method==4: #8
-		measurements = np.asarray(measurements)
-		cur_x = measurements / max(abs(measurements))
-		cur_x = cur_x - ref_curve
-		cur_x = np.expand_dims(cur_x,axis=2)
-		rs = RobustScaler()
-		rs.fit_transform(cur_x)
-		cur_x = np.squeeze(cur_x, axis=1)
-	else:
-		warnings.warn('No valid preprocessing method enterred. Continue with method 3.')
-		pre_process(measurements,ref_curve,ref_scale,method=3)
+    method = int(method)
+    if method==1: #5
+        measurements = np.asarray(measurements)
+        cur_x = measurements * ref_scale
+        cur_x = cur_x / max(abs(cur_x))
+    elif method==2: #3
+        measurements = np.asarray(measurements)
+        abs_x = np.absolute(measurements)
+        cur_x = measurements / abs_x.max(axis=0)
+        cur_x = cur_x - ref_curve
+    elif method==3: #6
+        measurements = np.asarray(measurements)
+        cur_x = measurements / max(abs(measurements))
+        cur_x = cur_x - ref_curve
+        cur_x = np.expand_dims(cur_x,axis=2)
+        mms = MinMaxScaler(feature_range=(-1,1))
+        mms.fit_transform(cur_x)
+        cur_x = np.squeeze(cur_x, axis=1)
+    elif method==4: #8
+        measurements = np.asarray(measurements)
+        cur_x = measurements / max(abs(measurements))
+        cur_x = cur_x - ref_curve
+        cur_x = np.expand_dims(cur_x,axis=2)
+        rs = RobustScaler()
+        rs.fit_transform(cur_x)
+        cur_x = np.squeeze(cur_x, axis=1)
+    else:
+        warnings.warn('No valid preprocessing method enterred. Continue with method 3.')
+        pre_process(measurements,ref_curve,ref_scale,method=3)
 
-	return cur_x
+    return cur_x
 
 
 # calculates scaling factor and reference curve according to sampled spectralons

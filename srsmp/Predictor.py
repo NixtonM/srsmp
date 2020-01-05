@@ -7,7 +7,7 @@ from keras.optimizers import Adam
 
 
 class Hydrophobic_Predictor:
-	def __init__(self):
+	def __init__(self,config_file='config.ini'):
 		# initialize config and params parser
 		self.config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 		self.params = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
@@ -25,7 +25,7 @@ class Hydrophobic_Predictor:
 			if files[0].endswith(".h5"):
 				self.model = load_model(model_dir+'/'+files[0])
 				self.params.read(model_dir+'/'+files[1])
-			elif file[0].endswith(".ini"):
+			elif files[0].endswith(".ini"):
 				self.params.read(model_dir+'/'+files[0])
 				self.model = load_model(model_dir+'/'+files[1])
 		except:
@@ -45,7 +45,8 @@ class Hydrophobic_Predictor:
 
 	def cut_to_range(self,measurements,wavelengths):
 		if self.params['Preprocessing']['sel_WL']:
-			ind = np.where( (wavelengths >= self.params['Preprocessing']['range_low']) & (wavelengths <= self.params['Preprocessing']['range_high']) )
+			ind = np.where( (wavelengths >= int(self.params['Preprocessing']['range_low'])) 
+                  & (wavelengths <= int(self.params['Preprocessing']['range_high'])) )
 			measurements = measurements[ind]
 		
 		return measurements

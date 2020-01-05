@@ -18,7 +18,7 @@ class SpectraGenerator:
         self.class_id = class_id
         self._config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
         self._config.read(config_file)
-        self._ingest_path = Path(self._config['Spectroscopy']['sample_ingest_dir_path'])
+        self._ingest_path = Path(self._config['Spectroscopy']['sample_ingest_dir'])
         self._ref_sample = self._config['Spectroscopy']['reference_spectra']
 
         self.thor_ccs = Thor.Thor_CCS175()

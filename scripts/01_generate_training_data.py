@@ -36,6 +36,8 @@ if __name__ == "__main__":
     print("---------------------------------------------")
     config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
     config.read(config_file)
+    check_and_init_all_dir(config)
+
     material_id = input_string("Provide material identifier (avoid whitespaces): ")
     print("---------------------------------------------")
     class_dict = dict(config['ClassLookup'])
@@ -52,7 +54,7 @@ if __name__ == "__main__":
 
 
     class_id = material_id + "_" + class_dict[property_id]
-    print("\nThe collected spectra will be saved in " + config['Spectroscopy']['sample_ingest_dir_path'] +
+    print("\nThe collected spectra will be saved in " + config['Spectroscopy']['sample_ingest_dir'] +
           "/" + class_id + ".json")
     print("---------------------------------------------")
     campaign_nr = input_int("Enter campaign number or -1 for automatic increase [-1]: ", -1)

@@ -67,6 +67,7 @@ num_filters = 100
 # data paths from config.ini file
 config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 config.read('config.ini')
+check_and_init_all_dir(config)
 
 train_path = config['NeuralNetTrain']['train_dir']
 if separate_data_sets:
