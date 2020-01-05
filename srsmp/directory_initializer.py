@@ -18,7 +18,7 @@ def check_and_init_all_dir(config):
         p.mkdir(parents=True,exist_ok=True)
 
 def make_base_datashare(config,scripts_loc):
-    SA_config_file = Path(config['Common']['base_dir']) / "sa_config.xit"
+    SA_config_file = Path(config['Common']['base_dir']) / "sa_config.ascii"
     
     com_link_loc = Path(config['PredictApp']['com_link_dir']) / Path(
         config['PredictApp']['com_link_file'])

@@ -17,15 +17,28 @@ from scipy.spatial.transform import Rotation as R
 config_file = "config.ini"
 
 
-def read_com_link(com_link_file,regex_pattern):
+def read_com_link(com_link_file):
+
+    datashare_regex = r"<([I|D|S]):(\w+)>\s+(\S*)\s*"
     data = com_link_file.read_text()
-    res = [float(x) for x in re.findall(regex_pattern,data)]
-    return {'X':res[0],'Y':res[1],'Z':res[2],'Rx':res[3],'Ry':res[4],'Rz':res[5]}
+    datashare_matches = re.findall(datashare_regex, data)
+    datashare_dict = dict()
+
+    for m in datashare_matches:
+        if m[0] == 'I':
+            datashare_dict[m[1]] = int(m[2])
+        elif m[0] == 'D':
+            datashare_dict[m[1]] = float(m[2])
+        elif m[0] == 'S':
+            datashare_dict[m[1]] = m[2]
+        else:
+            raise ValueError("Unknown DataShare data format")
+    return datashare_dict
 
 def transform_probe(probe):
     r = R.from_euler('xyz',np.asarray([probe['Rx'],probe['Ry'],probe['Rz']]),degrees=True)
     offset_world = r.apply(OFFSET)
-    return np.asarray([probe['X'],probe['Y'],probe['Z']]) + offset_world
+    return np.asarray([probe['X_TP'],probe['Y_TP'],probe['Z_TP']]) + offset_world
 
 
 if __name__ == "__main__":
@@ -67,10 +80,7 @@ if __name__ == "__main__":
 
     hydro_pred = Hydrophobic_Predictor()
     ref_set = False
-
-    # Definition of scientific pattern regex
-    sci_not_regex = re.compile('[+|-]?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *[+|-]?\ *[0-9]+)?')
-
+    
     pt_nr = int(class_id[-2:])*100
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
@@ -122,7 +132,7 @@ if __name__ == "__main__":
 
                     
                                 ## Do 3D transform
-                                probe = read_com_link(com_link_location,sci_not_regex)
+                                probe = read_com_link(com_link_location)
                                 pt_coord = transform_probe(probe)
 
                                 ## Write results
@@ -141,7 +151,7 @@ if __name__ == "__main__":
                                                     )
                                 com_link_location.write_bytes(SA_datashare.encode('ascii'))
                                 
-                                print("Measurement {:04d} taken and predicted as {}".format(pt_nr,class_prediction))
+                                print("Measurement {:04d} taken and predicted as {}".format(pt_nr,class_prediction_str))
                                 pt_nr += 1
                     exit_code = 0
                     conn.sendall(bytes(str(exit_code), 'utf8'))
@@ -152,4 +162,4 @@ if __name__ == "__main__":
                     break
             
             print("-----------------------")
-    print("Closed for business")
+    print("Saving and closing for business")
