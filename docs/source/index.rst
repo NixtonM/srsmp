@@ -15,7 +15,7 @@ The hardware used in this implementation is the following:
 
 .. toctree::
    :caption: User Guide:
-   :maxdepth: 3
+   :maxdepth: 2
 
    self
    content/installation
