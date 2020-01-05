@@ -28,7 +28,7 @@ other definitions. Save the changes to the *MP* and close the editor.
 Embed the *MP* by clicking on :menuselection:`Scripts --> Embedded Measurement Plans --> 
 Embed existing .MP file` and select your saved *MP*.
 
-Add a *MP execution node* by clicking :guilabel:`Relationship` |rarr| :guilabel:`MP Execution 
+Add a *MP execution node* by clicking :guilabel:`Relationship |rarr| MP Execution 
 Node` and assign the *embedded MP* by expaning *Measurement Plans* in the *TreeBar* on the left, 
 right-clicking your *MP* and selecting :guilabel:`Add To Relationship`. In the newly openend 
 *Relationship Selection* window, select *MP Execution* and click :guilabel:`OK`.
