@@ -108,3 +108,5 @@ venv.bak/
 #PLY
 lextab.py
 yacctab.py
+
+/_local
