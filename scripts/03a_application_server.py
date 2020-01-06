@@ -76,8 +76,6 @@ if __name__ == "__main__":
     # unique class_id --> will init empty data
     myDataHandler.load_class_data(class_id)
 
-    #current_reference = (None,None,)
-
     hydro_pred = Hydrophobic_Predictor()
     ref_set = False
     
@@ -86,7 +84,7 @@ if __name__ == "__main__":
         s.bind((HOST, PORT))
         s.listen()
         print("---------------------------------------------")
-        print('Ready for measurements')
+        print('Ready for reference measurement')
         while True:
             exit_order = False
             conn, addr = s.accept()

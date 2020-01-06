@@ -27,6 +27,7 @@ spectra and run (in a separate command prompt):
 
 .. code-block:: shell
 
+   $ cd repo/scripts
    $ python 03b_application_client.py -1
 
 The argument `-1` must be replaced by `-2` if using Spectralon 25% instead of 60%.
@@ -38,7 +39,6 @@ Once all measurements have been taken, run:
 
 .. code-block:: shell
 
-   $ cd repo/scripts
    $ python 03b_application_client.py -99
 
 This will save the spectral measurements and shut down the server.

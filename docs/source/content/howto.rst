@@ -1,7 +1,11 @@
 ﻿How To
 ======
 
-The work process is divided into **three** phases which will be described in the following sections:
+The work process is divided into **three** phases which will be described in the following sections.
+For each of these steps a seperate python file can be found in the directory :file:`repo/scripts/`.
+
+Global and project specific variables (**paths**, **prediction classes** etc.) need to configured within 
+:file:`repo/scripts/config.ini` before running the scripts.
 
 .. toctree::
    :maxdepth: 2
@@ -14,9 +18,6 @@ The work process is divided into **three** phases which will be described in the
 .. - Generation of trained neural network model
 .. - Real-time prediction
 
-For each of these steps a seperate python file can be found in the directory :file:`repo/scripts/`.
 
-Global and project specific variables (**paths**, **prediction classes** etc.) need to configured within 
-:file:`repo/scripts/config.ini` before running the scripts.
 
 
