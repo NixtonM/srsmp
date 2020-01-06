@@ -4,7 +4,7 @@
 The work process is divided into **three** phases which will be described in the following sections.
 For each of these steps a seperate python file can be found in the directory :file:`repo/scripts/`.
 
-Global and project specific variables (**paths**, **prediction classes** etc.) need to configured within 
+Global and project specific variables (**paths**, **prediction classes** etc.) need to be configured within 
 :file:`repo/scripts/config.ini` before running the scripts.
 
 .. toctree::
