@@ -17,6 +17,7 @@ For the training data, two options are available.
 #. Specific files are used for training and testing only, respectively.
 
 For option 1 (all data used), copy all files to the folder *data/training*. 
+
 For option 2 (specific files), copy all files for training to the folder *data/training* and all files 
 for testing to the folder *data/test*.
 
@@ -24,26 +25,26 @@ Adjust Variables
 ----------------
 Different parameters have to be set to successfully train the model.
 
-Open file: `repo/scripts/02_train_Predictor.py` in the editor to adjust the header variables.
+Open :file:`repo/scripts/02_train_Predictor.py` in the editor to adjust the header variables.
 
 What to train: 
-   :code: `separate_data_sets: Boolean`
+   :code:`separate_data_sets: Boolean`
       *True* if specific files are used for training and test (option 2 above).
       *False* if all files are used for training and test (option 1 above).
-   :code: `ML_baselines: Boolean`
+   :code:`ML_baselines: Boolean`
       Set to *True* if the machine learning baselines should be trained, too. (Includes Support Vector
       Machine, Linear Discriminant Analysis, k-Nearest Neighbors and Logistic Regression.)
-   :code: `basic_model: Boolean`
+   :code:`basic_model: Boolean`
       Set to *True* if the basic artificial neural network with three fully connected layers should be
       trained.
-   :code: `resnet_model: Boolean`
+   :code:`resnet_model: Boolean`
       Set to *True* if the adjusted ResNet8 should be trained.
 
 Data pre-processing:
    :code:`sel_WL: Boolean`
       Set to *True* the wavelength range is cut to the range of *range_low - range_high* (E.g. the 
       range specified in the spectrometers specification.)
-   :code:`range_low: Int` & :code:`range_high: Int` (To be set if code:`sel_WL=True`.)
+   :code:`range_low: Int` & :code:`range_high: Int` (To be set if :code:`sel_WL=True`.)
       Specifies the wavelength range to be used in nanometers.
    :code:`use_t_int: Boolean`
       Set to *True* the integration time is used to scale the measurement accordingly, re-introducing 
@@ -73,7 +74,7 @@ Neural network:
       Scalar defining the percentage of the data used for training. (Only applicable if option 1
       is chosen.)
    :code:`batch_size: Int`
-      |space|
+      Specifies the number of training samples used in one iteration.
    :code:`epochs: Int`
       Specifies the maximum number of epochs the model is trained for.
    :code:`val_split: Float`
@@ -82,7 +83,7 @@ Neural network:
       Scalar defining the percantage of neuronal connections erased.
    :code:`use_callbacks: Boolean`
       Whether or not to use callbacks (EarlyStopping, ModelCheckpoint, LearningRateScheduler,
-	  ReduceLROnPlateau).
+      ReduceLROnPlateau).
    :code:`num_filters: Int`
       Scalar defining the number of filters used in the fully connected layers for the ResNet8 
       architecture.
