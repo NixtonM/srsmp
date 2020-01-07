@@ -29,13 +29,13 @@ Open :file:`repo/scripts/02_train_Predictor.py` in the editor to adjust the head
 
 What to train: 
    :code:`separate_data_sets: Boolean`
-      *True* if specific files are used for training and test (option 2 above).
+      *True* if specific files are used for training and test (option 2 above). 
       *False* if all files are used for training and test (option 1 above).
    :code:`ML_baselines: Boolean`
-      Set to *True* if the machine learning baselines should be trained, too. (Includes Support Vector
+      Set to *True* if the machine learning baselines should be trained, too. (Includes Support Vector 
       Machine, Linear Discriminant Analysis, k-Nearest Neighbors and Logistic Regression.)
    :code:`basic_model: Boolean`
-      Set to *True* if the basic artificial neural network with three fully connected layers should be
+      Set to *True* if the basic artificial neural network with three fully connected layers should be 
       trained.
    :code:`resnet_model: Boolean`
       Set to *True* if the adjusted ResNet8 should be trained.
@@ -71,7 +71,7 @@ Data pre-processing:
 
 Neural network:
    :code:`train_size: Float`
-      Scalar defining the percentage of the data used for training. (Only applicable if option 1
+      Scalar defining the percentage of the data used for training. (Only applicable if option 1 
       is chosen.)
    :code:`batch_size: Int`
       Specifies the number of training samples used in one iteration.
@@ -82,10 +82,16 @@ Neural network:
    :code:`dropout_rate: Float`
       Scalar defining the percantage of neuronal connections erased.
    :code:`use_callbacks: Boolean`
-      Whether or not to use callbacks (EarlyStopping, ModelCheckpoint, LearningRateScheduler,
+      Whether or not to use callbacks (EarlyStopping, ModelCheckpoint, LearningRateScheduler, 
       ReduceLROnPlateau).
    :code:`num_filters: Int`
       Scalar defining the number of filters used in the fully connected layers for the ResNet8 
       architecture.
+
+Resulting Model
+---------------
+The trained model and the corresponding configuration file can be found in the results folder 
+:file:`results/models/` as defined in :file:`repo/scripts/config.ini`. The model (.h5) and the configuration 
+(.ini) file have the same file name (except for the ending).
 
 .. |space| unicode:: U+0020
