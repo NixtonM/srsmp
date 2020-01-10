@@ -3,7 +3,7 @@ Acquire Training Data
 
 This step allows the user to generate the spectral training data for a given material or material 
 property. The spectral training data is saved in separate files per *material identifier* and 
-*predicition class* using the *JSON* format in the *ingest folder* defined in the `config` file.
+*predicition class* using the *JSON* format in the *ingest folder* which is defined in the `config` file.
 
 Before running the script, make sure that the `config` file is configured correctly, that the 
 **Spectrometer** is connected to the PC and that there is **no** open instance of *Thorlabs OSA*, 
