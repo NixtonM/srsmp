@@ -12,6 +12,7 @@ The hardware used in this implementation is the following:
 - `Leica Absolute Tracker AT960 <https://www.hexagonmi.com/en-US/products/laser-tracker-systems/leica-absolute-tracker-at960>`_
 - `Thorlabs Compact Spectrometer CCS175 <https://www.thorlabs.com/thorproduct.cfm?partnumber=CCS175#ad-image-0>`_
 
+The following sections shows the user how to install and use this software package.
 
 .. toctree::
    :caption: User Guide:
@@ -21,12 +22,3 @@ The hardware used in this implementation is the following:
    content/installation
    content/howto
    
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

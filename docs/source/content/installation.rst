@@ -32,7 +32,7 @@ and therefore can be installed by:
    $ pip install .
 
 **SRSMP** uses `Instrumental <https://instrumental-lib.readthedocs.io/>`_ by *Nate Bogdanowicz*. At the time 
-of the deployment of **SRSMP**, required features within *Instrumental* were only available in the current 
+of the deployment of **SRSMP**, required features within *Instrumental* that were only available in the current 
 developer version. Therefore a wheel package of *Instrumental* (v0.6dev0) is provided within the repository. 
 To install perform:
 
