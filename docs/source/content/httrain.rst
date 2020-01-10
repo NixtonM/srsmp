@@ -13,13 +13,13 @@ Before training the model, training data has to be acquired as described in *Acq
 
 For the training data, two options are available.
 
-#. All data acquired are used for training and testing.
+#. All data acquired is used for training and testing.
 #. Specific files are used for training and testing only, respectively.
 
-For option 1 (all data used), copy all files to the folder *data/training*. 
+For option 1 (all data used), copy all files to the training directory (:file:`train_dir`), as defined in the config file. 
 
-For option 2 (specific files), copy all files for training to the folder *data/training* and all files 
-for testing to the folder *data/test*.
+For option 2 (specific files), copy all files for training to the training directory and all files 
+for testing to the testing directory (:file:`test_dir`), as defined in the config file.
 
 Adjust Variables
 ----------------
@@ -90,8 +90,8 @@ Neural network:
 
 Resulting Model
 ---------------
-The trained model and the corresponding configuration file can be found in the results folder 
-:file:`results/models/` as defined in :file:`repo/scripts/config.ini`. The model (.h5) and the configuration 
-(.ini) file have the same file name (except for the ending).
+The trained model and the corresponding configuration file can be found in the folder 
+:file:`models` as defined in :file:`results_dir` in the config file. The model (.h5) and the configuration 
+(.ini) file have the same file name.
 
 .. |space| unicode:: U+0020

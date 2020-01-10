@@ -35,13 +35,13 @@ from keras.callbacks.callbacks import EarlyStopping, ModelCheckpoint
 
 
 #%% Definitions
-# what to train
+# What to train
 separate_data_sets = False
 ML_baselines = False
 basic_model = True
 resnet_model = True
 
-# data preprocessing
+# Data pre-processing
 sel_WL = True
 range_low = 500 # [nm]
 range_high = 1000 # [nm]
@@ -50,7 +50,7 @@ data_augm_train = True
 data_augm_test = False # normally set to False
 preprocessing_method = 2
 
-# NN general
+# Neural network
 train_size = 0.8
 batch_size = 32
 epochs = 2
@@ -58,10 +58,10 @@ val_split = 0.2
 dropout_rate = 0.4
 use_callbacks = True
 
-# NN - ResNet
 num_filters = 100
 
-
+#-------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
 
 #%% load configuration and create log-file
 # data paths from config.ini file
@@ -322,8 +322,12 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 							 monitor='val_loss',
 							save_best_only=True)
 		lr_scheduler = LearningRateScheduler(lr_schedule)
-		cb_list = [es,mc,lr_scheduler] 
-		log1.write("Callbacks: EarlyStopping, ModelCheckpoint, LearningRateScheduler \n\n")
+		lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
+		  			       cooldown=0,
+					       patience=5,
+					       min_lr=0.5e-6)
+		cb_list = [es,mc,lr_scheduler,lr_reducer] 
+		log1.write("Callbacks: EarlyStopping, ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau \n\n")
 
 		# create .ini file with parameters
 		params = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
@@ -372,8 +376,6 @@ def basic_nn(X_train,y_train,X_test,y_test,class_lookup,dropout_rate,val_split,l
 	plt.close()
 
 	# calculate loss and accuracy on test data set
-	pred = model.predict(x=X_test)
-	pred = np.concatenate((pred,labels_test),axis=1)
 	score = model.evaluate(x=X_test, y=y_test)
 	print('loss: {}, accuracy: {}'.format(score[0],score[1]))
 
@@ -417,8 +419,12 @@ def resnet_fc(X_train,y_train,X_test,y_test,batch_size,epochs,val_split,num_clas
 							 monitor='val_loss',
 							save_best_only=True)
 		lr_scheduler = LearningRateScheduler(lr_schedule)
-		cb_list = [es,mc,lr_scheduler]
-		log1.write("Callbacks: EarlyStopping, ModelCheckpoint, LearningRateScheduler \n\n")
+		lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
+		  			       cooldown=0,
+					       patience=5,
+					       min_lr=0.5e-6)
+		cb_list = [es,mc,lr_scheduler,lr_reducer]
+		log1.write("Callbacks: EarlyStopping, ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau \n\n")
 
 		# create .ini file with parameters
 		params = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
