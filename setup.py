@@ -17,7 +17,7 @@ if __name__ == '__main__':
               'numpy',
               'pyvisa',
               #'instrumental-lib',
-              'tensorflow==2.0.0',
+              'tensorflow>=2.1.0',
               'keras==2.3.1',
               'scikit-learn',
               'matplotlib',
