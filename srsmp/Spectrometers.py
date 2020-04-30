@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 
-import
+from instrumental.drivers import instrument as inst_instrument
+import os, json, datetime, time
+from pathlib import Path
+
+from seabreeze.spectrometers import Spectrometer as sb_Spectrometer
+from seabreeze.spectrometers import list_devices as sb_list_devices
 
 
 class Spectrometer(ABC):
@@ -19,11 +24,11 @@ class ThorCCS175(Spectrometer):
 
     def __init__(self, integration_time=200):
         print("Establishing connection to Thorlabs CCS175 spectrometer.\n")
-        self.ccs = instrument('CCS')
+        self.instrument = inst_instrument('CCS')
         self.integration_time = integration_time  # in ms
         self.integration_time_test = integration_time // 10
         # self.wavelengths = self.ccs.get_wavelengths()
-        self.wavelengths = self.ccs._wavelength_array
+        self.wavelengths = self.instrument._wavelength_array
         print("Connection successful")
 
     def get_ideal_scan(self, target_intensity=0.8, test_time=None):
@@ -31,16 +36,16 @@ class ThorCCS175(Spectrometer):
         return self.get_scan(), self.integration_time
 
     def get_scan(self, test=False):
-        self.ccs.reset()
+        self.instrument.reset()
         if test:
-            self.ccs.set_integration_time('{} ms'.format(self.integration_time_test))
+            self.instrument.set_integration_time('{} ms'.format(self.integration_time_test))
         else:
-            self.ccs.set_integration_time('{} ms'.format(self.integration_time))
+            self.instrument.set_integration_time('{} ms'.format(self.integration_time))
 
-        self.ccs.start_single_scan()
-        while not self.ccs.is_data_ready():
+        self.instrument.start_single_scan()
+        while not self.instrument.is_data_ready():
             time.sleep(0.01)
-        data = self.ccs.get_scan_data()
+        data = self.instrument.get_scan_data()
         if max(data) > 0.95:
             raise Warning('Raw data is saturated')
         return data
@@ -79,13 +84,14 @@ class ThorCCS175(Spectrometer):
 
 class FlameNIR(Spectrometer):
 
-    def __init__(self, integration_time):
-        pass
+    def __init__(self, integration_time = 200):
+        self.instrument = sb_Spectrometer.from_first_available()
+        self.instrument.integration_time_micros(integration_time * 1000)
 
     def get_scan(self):
-        pass
+        return self.instrument.intensities()
 
     def set_integration_time(self, integration_time):
-        pass
+        self.instrument.integration_time_micros(integration_time * 1000)
 
 
