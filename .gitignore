@@ -110,3 +110,9 @@ lextab.py
 yacctab.py
 
 /_local
+
+# Ignore seabreeze lib folder
+libs/python-seabreeze-master/
+
+# Pycharm
+.idea/
