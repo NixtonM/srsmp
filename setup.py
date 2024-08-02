@@ -18,7 +18,7 @@ if __name__ == '__main__':
               'pyvisa',
               #'instrumental-lib',
               'tensorflow>=2.1.0',
-              'keras==2.3.1',
+              'keras==2.13.1',
               'scikit-learn',
               'matplotlib',
               ],
